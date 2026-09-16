@@ -1,0 +1,27 @@
+<launch>
+  <!-- 1. Argumentos configuráveis -->
+  <arg name="pkg_name" default="my_package" description="Nome do pacote ROS 2"/>
+  <arg name="model_name" default="meu_robo" description="Nome da entidade dentro do Gazebo"/>
+  <arg name="xacro_file" default="$(find-pkg-share $(var pkg_name))/urdf/robo.urdf.xacro" description="Caminho para o arquivo URDF ou Xacro"/>
+  
+  <!-- Coordenadas iniciais de spawn -->
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.05"/>
+
+  <!-- 2. Inicia o Gazebo (gzserver + gzclient) -->
+  <include file="$(find-pkg-share gazebo_ros)/launch/gazebo.launch.py"/>
+
+  <!-- 3. Publica a descrição do robô (/robot_description) processando o Xacro -->
+  <node pkg="robot_state_publisher" exec="robot_state_publisher" output="screen">
+    <param name="robot_description" value="$(command 'xacro $(var xacro_file)')"/>
+    <param name="use_sim_time" value="true"/>
+  </node>
+
+  <!-- 4. Spawna o robô no Gazebo a partir do tópico /robot_description -->
+  <node pkg="gazebo_ros" exec="spawn_entity.py" output="screen"
+        args="-topic robot_description -entity $(var model_name) -x $(var x) -y $(var y) -z $(var z)"/>
+
+</launch>
+
+
